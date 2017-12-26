@@ -1,45 +1,21 @@
-#!/bin/python
 import requests
 import sys
 import os
-#from requests.exceptions import ConnectionError
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-## disable https certificate warning
-
-
-
-
-#import optparse
-#import requests
-#from requests.packages.urllib3.exceptions import InsecureRequestWarning
-
-#requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
-#site_list=['http://222.73.204.250']
-#site_list=['http://127.0.0.1:8080']
 site_list=[]
 # GET 0
 # POST 1
-# HEAD 2
-# OPTION 3
-# PUT 4
-# DELETE 5
-# ....
-
-
 # ==========
 # [TODO]
 #  get payload from file
 #  multi-threads
 #  [DONE] exception handler
-#  turn %25 back to %
-#  purify paralized query eg. files
-#  clean file storage
-#  with parser!
+#  [DONE, mixed with multi layer encoding]turn %25 back to %
+#  [DONE, stringIO as file] purify paralized query eg. files
+#  [DONE, no more files]clean file storage
+#  [DONE, use sys.args[]]with parser!
 # ==========
-
-
 class Attacks:
     def __init__(self, verb, url, para, head, file, status, name):
         self.verb = verb
@@ -79,7 +55,6 @@ vbGxlY3Rpb25zLlRyAAJ2cgAQamF2YS5sYW5nLlN0cmluZ6DwpDh6O7NCAgAAeHB2cQB4cAAAAAJ0BX1
 WFtOyBpbXBvcnQgc3VuLm1pc2MuQkFTRTY0RGVjb2RlcjsgYwAAAQANamFsZHhwP0AAOQ=='},None,None,403,'JAVA deserialization'))
 # java deserialization
 
-#attack_list.append(Attacks(1,'/',None,None,{'upload_file': open('s.rar.php.rar','rb')},403,'Multi suffix file upload'))
 attack_list.append(Attacks(1,'/',None,None,{'upload_file': ('s.php.rar','something here\n')},403,'Multi suffix file upload'))
 # file upload
 
@@ -95,7 +70,7 @@ attack_list.append(Attacks(0,'/',{'id':'1+UnIoN/**/SeLecT/**/1,2,3'},None,None,4
 attack_list.append(Attacks(0,'/',{'title':'onerror=a=alert;a=()'},None,None,403,'XSS with simple bypass'))
 # xss in url 2
 
-attack_list.append(Attacks(1,'/somewhereyoucanupload',None,{'Content-Type':'image/jpeg'},{'upload_file': ('s.jpg','something here\n')},403,'fake file'))
+attack_list.append(Attacks(1,'/somewhereyoucanupload',None,{'Content-Type':'image/jpeg'},{'upload_file': ('s.jpg','<?php ($_=@$_GET[2]).@$_($_POST[1])?>\n')},403,'fake file'))
 # file upload 2
 
 attack_list.append(Attacks(0,'/?f=../../../../../etc/test/../passwd',None,None,None,403,'LFI'))
@@ -113,14 +88,14 @@ attack_list.append(Attacks(0,'/?aWQ9MSBhbmQgaWQ9Mg==',None,None,None,403,'Base64
 attack_list.append(Attacks(0,'/?id%3D1%20and%201%3D2',None,None,None,403,'URL decoding'))
 # url decode
 
-attack_list.append(Attacks(0,'/?value=%26%23x3C%3Ba%20href%3D%26%23x27%3B%20%26%2314%3B%20javascript%3Aalert%281%29%20\
-%26%23x27%3B%20%2f%26%23x3E%3B',None,None,None,403,'HTML entities decoding'))
+attack_list.append(Attacks(0,'/',{'value':'%26%23x3C%3Ba%20href%3D%26%23x27%3B%20%26%2314%3B%20javascript%3Aalert%281%29%20\
+%26%23x27%3B%20%2f%26%23x3E%3B'},None,None,403,'HTML entities decoding'))
 # html entities decode
 
 attack_list.append(Attacks(0,'/?value=0x3c7363726970743e616c657274282f7873732f293c2f7363726970743e',None,None,None,403,'HEX decoding'))
 # hex decode
 
-attack_list.append(Attacks(0,'/?%u0073%u0065%u006c%u0065%u0063%u0074 1 from t%23',None,{'Content-Type':'application/x-www-form-urlencoded'},None,403,'UNICODE decoding'))
+attack_list.append(Attacks(0,'/',{'v':'%u0073%u0065%u006c%u0065%u0063%u0074 1 from t%23'},{'Content-Type':'application/x-www-form-urlencoded'},None,403,'UNICODE decoding'))
 # unicode decode
 
 attack_list.append(Attacks(0,'/?<script>eval(/u0061/u006c/u0065/u0072/u0074(1))</script>',None,None,None,403,'eval with coding'))
@@ -140,7 +115,7 @@ attack_list.append(Attacks(0,'/',None,{'User-Agent':'SQLMAP v1.1'},None,403,'Cra
 def main():
     print
     print
-    print '###########################'#
+    print '###########################'
     print '#   Crappy Waf Validator  #'
     print '#   someone@somesite.com  #'
     print '#       v 0.1 alpha       #'
@@ -160,22 +135,19 @@ def main():
         while j[-1:] == '/':    # ends with slash
             j=j[0:-2]
         site_list.append(j)
-    create_file()
 
 def get_dispatcher(tgt,atk):
-    #try:
-    r = requests.get(tgt + atk.url, params=atk.para, headers=atk.head, timeout=2,verify=False)
-    #except requests.exceptions.ConnectionError, e:
-    #    print e
-    #print r.text
 
+    r = requests.get(tgt + atk.url, params=atk.para, headers=atk.head, timeout=2,verify=False)
     is_waf_nailed(r,atk)
 
 def post_dispatcher(tgt,atk):
+
     r = requests.post(tgt + atk.url,data=atk.para,headers=atk.head,files=atk.file, timeout=2,verify=False)
     is_waf_nailed(r,atk)
 
 def is_waf_nailed(r,atk):
+
     if r.status_code==atk.status:
         print '[+] '+ atk.name + ' attack intercepted! with status code: ' + str(r.status_code)
     else:
@@ -187,62 +159,23 @@ def print_usage():
     print '[INFO] Have fun!'
     print
 
-def create_file():
-    try:
-        with open('s.rar.php.rar', 'w+') as f:
-            f.write("something here")
-    except Exception, e:
-        print e
-    try:
-        with open('s.jpg', 'w+') as f:
-            f.write("<?php ($_=@$_GET[2]).@$_($_POST[1])?>")
-    except Exception, e:
-        print e
-
-def clear_file():
-    #try:
-    #    os.remove("s.rar.php.rar")
-    #    os.remove("s.jpg")
-    #except:
-    #    print 'Maid job failed, remove files ur self.'
-    pass
-
-
-
 main()
 for i in site_list:
     for j in attack_list:
         try:
             if j.verb==0:
                 # should be switch in case of over 2 http verbs
-            #try:
                 get_dispatcher(i,j)
-                # cluster bomber
-            #except requests.exceptions.ConnectionError, e:
-                #print e
-                #print str(e).split(':')[-1][1:-4]
-                #sys.exit()
-
             else:
-            #try:
                 post_dispatcher(i,j)
-            #except Exception, e:
-                #print '[Error]', e
-                #print_usage()
-                #sys.exit()
         except requests.ConnectionError:
             print '[Error] Connection Error'
             sys.exit()
         except requests.Timeout:
             print '[Error] Time Out'
             sys.exit()
-            #if 'y'==raw_input('Retry? (y/n)').lower():
-            #    main()
-        #except (requests.exceptions.RequestsWarning,requests.exceptions.SSLError) as e:
-        #    pass
         except requests.RequestException,e:
             if ''==raw_input('[Error] FATAL: press <enter> to see full error message'):
                 print e
                 sys.exit()
             sys.exit()
-#clear_file()
