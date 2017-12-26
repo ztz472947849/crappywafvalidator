@@ -79,7 +79,8 @@ vbGxlY3Rpb25zLlRyAAJ2cgAQamF2YS5sYW5nLlN0cmluZ6DwpDh6O7NCAgAAeHB2cQB4cAAAAAJ0BX1
 WFtOyBpbXBvcnQgc3VuLm1pc2MuQkFTRTY0RGVjb2RlcjsgYwAAAQANamFsZHhwP0AAOQ=='},None,None,403,'JAVA deserialization'))
 # java deserialization
 
-attack_list.append(Attacks(1,'/',None,None,{'upload_file': open('s.rar.php.rar','rb')},403,'Multi suffix file upload'))
+#attack_list.append(Attacks(1,'/',None,None,{'upload_file': open('s.rar.php.rar','rb')},403,'Multi suffix file upload'))
+attack_list.append(Attacks(1,'/',None,None,{'upload_file': ('s.php.rar','something here\n')},403,'Multi suffix file upload'))
 # file upload
 
 attack_list.append(Attacks(0,'/?f=../../../../../etc/passwd'+'\x00'+'.img',None,None,None,403,'hex 00 and LFI'))
@@ -94,7 +95,7 @@ attack_list.append(Attacks(0,'/',{'id':'1+UnIoN/**/SeLecT/**/1,2,3'},None,None,4
 attack_list.append(Attacks(0,'/',{'title':'onerror=a=alert;a=()'},None,None,403,'XSS with simple bypass'))
 # xss in url 2
 
-attack_list.append(Attacks(1,'/somewhereyoucanupload',None,{'Content-Type':'image/jpeg'},{'upload_file': open('s.jpg','rb')},403,'fake file'))
+attack_list.append(Attacks(1,'/somewhereyoucanupload',None,{'Content-Type':'image/jpeg'},{'upload_file': ('s.jpg','something here\n')},403,'fake file'))
 # file upload 2
 
 attack_list.append(Attacks(0,'/?f=../../../../../etc/test/../passwd',None,None,None,403,'LFI'))
@@ -244,4 +245,4 @@ for i in site_list:
                 print e
                 sys.exit()
             sys.exit()
-clear_file()
+#clear_file()
