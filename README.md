@@ -1,5 +1,5 @@
 # crappywafvalidator
-A creepy WAF validator with hard-coded paylaods
+A crappy WAF validator with hard-coded paylaods
 
 
 
